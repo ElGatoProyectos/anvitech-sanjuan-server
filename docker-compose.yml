@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  db:
+    image: mysql
+    container_name: MYSQL
+    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: admin 
+      # MYSQL_DATABASE: app_check
+      # MYSQL_TCP_PORT: 3360
+    volumes:
+      - ./mysql:/data/db
