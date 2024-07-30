@@ -998,13 +998,13 @@ class ReportService {
         }
       }
 
-      if (
-        dataTemporalHours.hora_inicio_refrigerio === "" ||
-        dataTemporalHours.hora_fin_refrigerio === ""
-      ) {
-        formatData.falta = "si";
-        formatData.discount = 35;
-      }
+      // if (
+      //   dataTemporalHours.hora_inicio_refrigerio === "" ||
+      //   dataTemporalHours.hora_fin_refrigerio === ""
+      // ) {
+      //   formatData.falta = "si";
+      //   formatData.discount = 35;
+      // }
 
       const updated = await prisma.detailReport.update({
         where: { id: detailReportId },
@@ -1181,13 +1181,13 @@ class ReportService {
             }
           }
 
-          if (
-            row.hora_inicio_refrigerio === "" ||
-            row.hora_fin_refrigerio === ""
-          ) {
-            formatData.falta = "si";
-            formatData.discount = 35;
-          }
+          // if (
+          //   row.hora_inicio_refrigerio === "" ||
+          //   row.hora_fin_refrigerio === ""
+          // ) {
+          //   formatData.falta = "si";
+          //   formatData.discount = 35;
+          // }
 
           //- validamos si esta en un fecha donde tiene una escusa para no asistir
 
@@ -1383,13 +1383,13 @@ class ReportService {
                 formatData.tardanza = "si";
               }
             }
-            if (
-              row.hora_inicio_refrigerio === "" ||
-              row.hora_fin_refrigerio === ""
-            ) {
-              formatData.falta = "si";
-              formatData.discount = 35;
-            }
+            // if (
+            //   row.hora_inicio_refrigerio === "" ||
+            //   row.hora_fin_refrigerio === ""
+            // ) {
+            //   formatData.falta = "si";
+            //   formatData.discount = 35;
+            // }
 
             //- validamos si esta en un fecha donde tiene una escusa para no asistir
             const responseValidateWorkerInDay = await this.validateDayInWorker(

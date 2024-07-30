@@ -15,7 +15,7 @@ export function cronStart() {
       const dayOfWeek = limaDate.getDay();
 
       // solo evitaria si fuese lunes, porque si es lunes jalaria del domingo
-      if (dayOfWeek !== 1) {
+      if (dayOfWeek !== 1 && dayOfWeek !== 0) {
         const dayOfMonth = previousDayDate.getDate();
         const month = previousDayDate.getMonth() + 1;
         const year = previousDayDate.getFullYear();

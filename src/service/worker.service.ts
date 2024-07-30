@@ -174,6 +174,7 @@ class WorkerService {
     try {
       const workers = await prisma.worker.findMany();
       if (workers.length >= maxWorkers) {
+        console.log("Llego al maximo");
         return httpResponse.http400();
       }
       const created = await prisma.worker.create({ data });

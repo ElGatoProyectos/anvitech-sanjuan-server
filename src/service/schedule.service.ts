@@ -51,12 +51,12 @@ class ScheduleService {
     try {
       const dataSet = {
         worker_id: workerId,
-        lunes: "09:00-18:00",
-        martes: "09:00-18:00",
-        miercoles: "09:00-18:00",
-        jueves: "09:00-18:00",
-        viernes: "09:00-18:00",
-        sabado: "09:00-18:00",
+        lunes: "07:30-15:00",
+        martes: "07:30-15:00",
+        miercoles: "07:30-15:00",
+        jueves: "07:30-15:00",
+        viernes: "07:30-15:00",
+        sabado: "",
         domingo: "",
         comments: "",
       };

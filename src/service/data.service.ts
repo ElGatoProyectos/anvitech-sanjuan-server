@@ -7,6 +7,7 @@ import { formatDateForPrisma } from "../functions/date-transform";
 import { scheduleService } from "./schedule.service";
 import { vacationService } from "./vacation.service";
 import prisma from "../prisma";
+import { maxWorkers } from "../constants/workers.constant";
 
 class DataService {
   async instanceDataInit(
@@ -76,138 +77,6 @@ class DataService {
     }
   }
 
-  /// falta otro metodo igual que no registre, solo que muestre
-
-  // async instanceDetailData(
-  //   token: string,
-  //   minDay: number,
-  //   maxDay: number,
-  //   selectedYear: number,
-  //   selectedMonth: number,
-  //   report: any
-  // ) {
-  //   try {
-  //     const days = [
-  //       "lunes",
-  //       "martes",
-  //       "miercoles",
-  //       "jueves",
-  //       "viernes",
-  //       "sabado",
-  //       "domingo",
-  //     ];
-
-  //     let pos = 0;
-
-  //     for (let day = minDay; day <= maxDay; day++) {
-  //       /// definimos el dia donde estamos para poder hacer el registro a la bd 📅
-  //       const dayString = this.functionCaptureDayFromNumber(
-  //         day,
-  //         selectedYear,
-  //         selectedMonth
-  //       );
-
-  //       ///capturamos toda la data por dia de toda las paginas  [{},{},{}....{}]
-  //       // todo todo ok
-  //       const responseDataForDay = await this.captureDataForDay(
-  //         token,
-  //         day,
-  //         selectedMonth,
-  //         selectedYear
-  //       );
-
-  //       /// filtrar la data para que se registre por usuario
-  //       const workers = await workerService.findAll();
-  //       await prisma.$disconnect();
-
-  //       /// iteración de trabajadores para obtener sus datos y analizar en base a eso
-  //       /// antes de pasar a esto deberia haber un filtro de validar si el registro.dni existe en la base de datos, si no existe, hacemos otro proceso que registre al trabajador en la bd y luego el reporte
-
-  //       const processedWorknos = new Set<string>();
-
-  //       await Promise.all(
-  //         responseDataForDay.content.map(async (row: any) => {
-  //           const workno = row.employee.workno;
-
-  //           // Verifica si el workno ya ha sido procesado
-
-  //           // Marca este workno como procesado
-  //           if (processedWorknos.has(workno)) {
-  //             return; // Si ya ha sido procesado, salta este ciclo
-  //           }
-  //           processedWorknos.add(workno);
-
-  //           const rowState = responseDataForDay.content.filter(
-  //             (item: any) => item.employee.workno === workno
-  //           );
-
-  //           // Validar que el trabajador cuyos registros ya se evaluaron, no se vuelva a repetir en otro bucle
-  //           const worker = await workerService.findByDNI(workno);
-  //           if (worker.ok) {
-  //             // Validamos la data con respecto al trabajador
-  //             await this.newMethodRegisterReport(
-  //               worker.content,
-  //               rowState,
-  //               dayString,
-  //               report,
-  //               day,
-  //               selectedMonth,
-  //               selectedYear
-  //             );
-  //           } else {
-  //             // Registramos al trabajador
-  //             const newWorker = {
-  //               full_name:
-  //                 row.employee.first_name + " " + row.employee.last_name, // Corrige el nombre completo concatenando first_name y last_name
-  //               dni: workno,
-  //               department: row.employee.department,
-  //               position: row.employee.job_title,
-  //             };
-
-  //             const responseNewWorker = await workerService.createNoHireDate(
-  //               newWorker
-  //             );
-
-  //             await scheduleService.createScheduleDefault(
-  //               responseNewWorker.content.id
-  //             );
-  //             await this.newMethodRegisterReport(
-  //               responseNewWorker.content,
-  //               rowState,
-  //               dayString,
-  //               report,
-  //               day,
-  //               selectedMonth,
-  //               selectedYear
-  //             );
-  //           }
-  //         })
-  //       );
-  //       // anterior --- eliminado
-  //       // const responseMap = workers.content.map(async (worker: any) => {
-  //       //   await this.filterAndRegisterForUser(
-  //       //     responseDataForDay.content,
-  //       //     worker,
-  //       //     dayString,
-  //       //     report,
-  //       //     day,
-  //       //     selectedMonth,
-  //       //     selectedYear
-  //       //   );
-  //       // });
-
-  //       pos++;
-  //     }
-
-  //     await prisma.$disconnect();
-
-  //     return httpResponse.http200("Report created", "Report created");
-  //   } catch (error) {
-  //     await prisma.$disconnect();
-  //     return errorService.handleErrorSchema(error);
-  //   }
-  // }
-
   async instanceDetailData(
     token: string,
     minDay: number,
@@ -228,6 +97,10 @@ class DataService {
       ];
       const promises = [];
 
+      const { content: workerCount } = await workerService.findAll();
+
+      let dynamicWorkerCount = workerCount.length;
+
       const responseDataForDay = await this.captureDataForDay(
         token,
         minDay,
@@ -247,57 +120,69 @@ class DataService {
 
         const processedWorknos = new Set();
 
-        const dayPromises = responseDataForDay.content.map(async (row: any) => {
-          const workno = row.employee.workno;
-          if (processedWorknos.has(workno)) {
-            return;
+        console.log(responseDataForDay.content.length);
+
+        const dayPromises = await responseDataForDay.content.map(
+          async (row: any) => {
+            const workno = row.employee.workno;
+            if (processedWorknos.has(workno)) {
+              return;
+            }
+            processedWorknos.add(workno);
+
+            const rowState = responseDataForDay.content.filter(
+              (item: any) => item.employee.workno === workno
+            );
+
+            const worker = await workerService.findByDNI(workno);
+
+            if (worker.ok) {
+              await this.newMethodRegisterReport(
+                worker.content,
+                rowState,
+                dayString,
+                report,
+                day,
+                selectedMonth,
+                selectedYear
+              );
+            } else {
+              dynamicWorkerCount++;
+
+              if (dynamicWorkerCount > maxWorkers) return;
+              const newWorker = {
+                full_name:
+                  row.employee.first_name + " " + row.employee.last_name,
+                dni: workno,
+                department: row.employee.department,
+                position: row.employee.job_title,
+              };
+
+              const responseNewWorker = await workerService.createNoHireDate(
+                newWorker
+              );
+
+              // validamos si llego al maximo
+
+              if (!responseNewWorker.ok) return httpResponse.http400();
+              else {
+                // Incremento del contador
+                await scheduleService.createScheduleDefault(
+                  responseNewWorker.content.id
+                );
+                await this.newMethodRegisterReport(
+                  responseNewWorker.content,
+                  rowState,
+                  dayString,
+                  report,
+                  day,
+                  selectedMonth,
+                  selectedYear
+                );
+              }
+            }
           }
-          processedWorknos.add(workno);
-
-          const rowState = responseDataForDay.content.filter(
-            (item: any) => item.employee.workno === workno
-          );
-
-          const worker = await workerService.findByDNI(workno);
-          if (worker.ok) {
-            await this.newMethodRegisterReport(
-              worker.content,
-              rowState,
-              dayString,
-              report,
-              day,
-              selectedMonth,
-              selectedYear
-            );
-          } else {
-            const newWorker = {
-              full_name: row.employee.first_name + " " + row.employee.last_name,
-              dni: workno,
-              department: row.employee.department,
-              position: row.employee.job_title,
-            };
-            const responseNewWorker = await workerService.createNoHireDate(
-              newWorker
-            );
-
-            // validamos si llego al maximo
-
-            if (!responseNewWorker.ok) return;
-
-            await scheduleService.createScheduleDefault(
-              responseNewWorker.content.id
-            );
-            await this.newMethodRegisterReport(
-              responseNewWorker.content,
-              rowState,
-              dayString,
-              report,
-              day,
-              selectedMonth,
-              selectedYear
-            );
-          }
-        });
+        );
 
         // nuevo
 
@@ -329,7 +214,7 @@ class DataService {
         promises.push(Promise.allSettled(dayPromises2));
       }
 
-      Promise.allSettled(promises.flat()).then(() => {
+      await Promise.allSettled(promises.flat()).then(() => {
         return httpResponse.http200("report executed");
       });
     } catch (error) {
@@ -420,18 +305,12 @@ class DataService {
                 formatData.tardanza = "si";
                 formatData.discount = 35;
               } else {
-                if (newHour === 9) {
-                  if (Number(minutes) <= 5) {
+                if (newHour === Number(hourStart)) {
+                  if (Number(minutes) <= minutesStart) {
                     formatData.tardanza = "no";
-                  } else if (Number(minutes) > 5 && Number(minutes) <= 15) {
+                  } else {
                     formatData.tardanza = "si";
                     formatData.discount = 5;
-                  } else if (Number(minutes) > 15 && Number(minutes) <= 30) {
-                    formatData.tardanza = "si";
-                    formatData.discount = 10;
-                  } else if (Number(minutes) > 30 && Number(minutes) <= 59) {
-                    formatData.tardanza = "si";
-                    formatData.discount = 20;
                   }
                 } else {
                   formatData.tardanza = "no";
@@ -440,13 +319,15 @@ class DataService {
                 }
               }
             }
-          } else if (newHour >= 12 && newHour <= 16) {
-            if (formatData.hora_inicio_refrigerio === "") {
-              formatData.hora_inicio_refrigerio = newHour + ":" + minutes;
-            } else {
-              formatData.hora_fin_refrigerio = newHour + ":" + minutes;
-            }
-          } else {
+          }
+          // else if (newHour >= 12 && newHour <= 16) {
+          //   if (formatData.hora_inicio_refrigerio === "") {
+          //     formatData.hora_inicio_refrigerio = newHour + ":" + minutes;
+          //   } else {
+          //     formatData.hora_fin_refrigerio = newHour + ":" + minutes;
+          //   }
+          // }
+          else {
             if (newHour >= Number(hourEnd)) {
               formatData.falta = "no";
             } else {
@@ -565,7 +446,7 @@ class DataService {
         },
       });
 
-      if (dataDayForWorker.length < 4) {
+      if (dataDayForWorker.length < 2) {
         formatData.falta = "si";
         formatData.tardanza = "no";
         formatData.discount = 35;
@@ -652,6 +533,7 @@ class DataService {
           }
 
           if (newHour <= 11) {
+            //-todo aqui agregue el if para validar la hora de inicio
             if (formatData.hora_inicio === "") {
               formatData.hora_inicio = newHour + ":" + minutes;
               if (newHour > Number(hourStart)) {
@@ -659,18 +541,12 @@ class DataService {
                 formatData.tardanza = "si";
                 formatData.discount = 35;
               } else {
-                if (newHour === 9) {
-                  if (Number(minutes) <= 5) {
+                if (newHour === Number(hourStart)) {
+                  if (Number(minutes) <= minutesStart) {
                     formatData.tardanza = "no";
-                  } else if (Number(minutes) > 5 && Number(minutes) <= 15) {
+                  } else {
                     formatData.tardanza = "si";
                     formatData.discount = 5;
-                  } else if (Number(minutes) > 15 && Number(minutes) <= 30) {
-                    formatData.tardanza = "si";
-                    formatData.discount = 10;
-                  } else if (Number(minutes) > 30 && Number(minutes) <= 59) {
-                    formatData.tardanza = "si";
-                    formatData.discount = 20;
                   }
                 } else {
                   formatData.tardanza = "no";
@@ -679,13 +555,15 @@ class DataService {
                 }
               }
             }
-          } else if (newHour >= 12 && newHour <= 16) {
-            if (formatData.hora_inicio_refrigerio === "") {
-              formatData.hora_inicio_refrigerio = newHour + ":" + minutes;
-            } else {
-              formatData.hora_fin_refrigerio = newHour + ":" + minutes;
-            }
-          } else {
+          }
+          // else if (newHour >= 12 && newHour <= 16) {
+          //   if (formatData.hora_inicio_refrigerio === "") {
+          //     formatData.hora_inicio_refrigerio = newHour + ":" + minutes;
+          //   } else {
+          //     formatData.hora_fin_refrigerio = newHour + ":" + minutes;
+          //   }
+          // }
+          else {
             if (newHour >= Number(hourEnd)) {
               formatData.falta = "no";
             } else {
@@ -893,33 +771,27 @@ class DataService {
           //   }
           // }
           if (newHour <= 11) {
-            formatData.hora_inicio = newHour + ":" + minutes;
-            if (newHour > Number(hourStart)) {
-              formatData.tardanza = "si";
-              formatData.discount = 35;
-            } else {
-              if (newHour === 9) {
-                if (Number(minutes) <= 5) {
-                  formatData.tardanza = "no";
-                } else if (Number(minutes) > 5 && Number(minutes) <= 15) {
-                  formatData.tardanza = "si";
-                  formatData.discount = 5;
-                } else if (Number(minutes) > 15 && Number(minutes) <= 30) {
-                  formatData.tardanza = "si";
-                  formatData.discount = 10;
-                } else if (Number(minutes) > 30 && Number(minutes) <= 59) {
-                  formatData.tardanza = "si";
-                  formatData.discount = 20;
-                }
+            //-todo aqui agregue el if para validar la hora de inicio
+            if (formatData.hora_inicio === "") {
+              formatData.hora_inicio = newHour + ":" + minutes;
+              if (newHour > Number(hourStart)) {
+                // si es mas que las 9 am o sea 10 am
+                formatData.tardanza = "si";
+                formatData.discount = 35;
               } else {
-                formatData.tardanza = "no";
+                if (newHour === Number(hourStart)) {
+                  if (Number(minutes) <= minutesStart) {
+                    formatData.tardanza = "no";
+                  } else {
+                    formatData.tardanza = "si";
+                    formatData.discount = 5;
+                  }
+                } else {
+                  formatData.tardanza = "no";
+                  formatData.falta = "no";
+                  formatData.discount = 0;
+                }
               }
-            }
-          } else if (newHour >= 12 && newHour <= 16) {
-            if (formatData.hora_inicio_refrigerio === "") {
-              formatData.hora_inicio_refrigerio = newHour + ":" + minutes;
-            } else {
-              formatData.hora_fin_refrigerio = newHour + ":" + minutes;
             }
           } else {
             if (newHour >= Number(hourEnd)) {
