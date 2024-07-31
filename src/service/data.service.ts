@@ -334,7 +334,7 @@ class DataService {
               formatData.falta = "no";
             } else {
               // formatData.falta = "si";
-              formatData.tardanza = "no";
+              // formatData.tardanza = "no";
               formatData.discount = 35;
             }
             formatData.hora_salida = newHour + ":" + minutes;
@@ -450,7 +450,7 @@ class DataService {
 
       if (dataDayForWorker.length < 2) {
         formatData.falta = "si";
-        formatData.tardanza = "no";
+        // formatData.tardanza = "no";
         formatData.discount = 35;
       }
 
@@ -491,8 +491,8 @@ class DataService {
       //- definimos las horas del horario ====================================================
 
       const [lunesStart, lunesEnd] = schedule.lunes.split("-");
-      const [hourStart, minutesStart] = lunesStart.split(":");
-      const [hourEnd, minutesEnd] = lunesEnd.split(":");
+      const [hourStart, minutesStart] = lunesStart.split(":").map(Number);
+      const [hourEnd, minutesEnd] = lunesEnd.split(":").map(Number);
 
       const formatData: any = {
         report_id: report.id,
@@ -569,8 +569,8 @@ class DataService {
             if (newHour >= Number(hourEnd)) {
               formatData.falta = "no";
             } else {
-              formatData.falta = "si";
-              formatData.tardanza = "no";
+              // formatData.falta = "si";
+              // formatData.tardanza = "no";
               formatData.discount = 35;
             }
             formatData.hora_salida = newHour + ":" + minutes;
@@ -671,9 +671,9 @@ class DataService {
         },
       });
 
-      if (dataDayForWorker.length < 4) {
+      if (dataDayForWorker.length < 2) {
         formatData.falta = "si";
-        formatData.tardanza = "no";
+        // formatData.tardanza = "no";
         formatData.discount = 35;
       }
 

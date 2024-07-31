@@ -228,7 +228,7 @@ class DataService {
                             }
                             else {
                                 // formatData.falta = "si";
-                                formatData.tardanza = "no";
+                                // formatData.tardanza = "no";
                                 formatData.discount = 35;
                             }
                             formatData.hora_salida = newHour + ":" + minutes;
@@ -329,7 +329,7 @@ class DataService {
                 });
                 if (dataDayForWorker.length < 2) {
                     formatData.falta = "si";
-                    formatData.tardanza = "no";
+                    // formatData.tardanza = "no";
                     formatData.discount = 35;
                 }
                 if (vacationResponse.length > 0 ||
@@ -357,8 +357,8 @@ class DataService {
                 const schedule = responseSchedule.content;
                 //- definimos las horas del horario ====================================================
                 const [lunesStart, lunesEnd] = schedule.lunes.split("-");
-                const [hourStart, minutesStart] = lunesStart.split(":");
-                const [hourEnd, minutesEnd] = lunesEnd.split(":");
+                const [hourStart, minutesStart] = lunesStart.split(":").map(Number);
+                const [hourEnd, minutesEnd] = lunesEnd.split(":").map(Number);
                 const formatData = {
                     report_id: report.id,
                     tardanza: "no",
@@ -429,8 +429,8 @@ class DataService {
                                 formatData.falta = "no";
                             }
                             else {
-                                formatData.falta = "si";
-                                formatData.tardanza = "no";
+                                // formatData.falta = "si";
+                                // formatData.tardanza = "no";
                                 formatData.discount = 35;
                             }
                             formatData.hora_salida = newHour + ":" + minutes;
@@ -519,9 +519,9 @@ class DataService {
                         date: dateYesterday,
                     },
                 });
-                if (dataDayForWorker.length < 4) {
+                if (dataDayForWorker.length < 2) {
                     formatData.falta = "si";
-                    formatData.tardanza = "no";
+                    // formatData.tardanza = "no";
                     formatData.discount = 35;
                 }
                 if (vacationResponse.length > 0 ||
