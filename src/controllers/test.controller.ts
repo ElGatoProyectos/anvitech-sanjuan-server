@@ -6,10 +6,10 @@ class TestController {
     try {
       const date = new Date();
       const serviceResponse = await dataService.instanceDataInit(
-        19,
+        15,
         19,
         2024,
-        6
+        7
       );
 
       response.status(serviceResponse.statusCode).json(serviceResponse.content);

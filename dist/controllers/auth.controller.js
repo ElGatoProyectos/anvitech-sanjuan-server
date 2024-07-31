@@ -19,6 +19,7 @@ class AuthController {
     login(request, response) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                console.log("hereee");
                 const { username, password } = yield request.body;
                 const responseData = yield user_service_1.userService.findByDni(username);
                 if (!responseData.ok) {

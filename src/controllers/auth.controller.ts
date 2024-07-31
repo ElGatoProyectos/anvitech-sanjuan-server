@@ -5,6 +5,7 @@ import bcrypt from "bcrypt";
 class AuthController {
   async login(request: Request, response: Response): Promise<void> {
     try {
+      console.log("hereee");
       const { username, password } = await request.body;
 
       const responseData = await userService.findByDni(username);

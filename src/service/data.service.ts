@@ -255,8 +255,8 @@ class DataService {
       // ! corregir esto
       // const [lunesStart, lunesEnd] = "09:00-18:00".split("-");
 
-      const [hourStart, minutesStart] = lunesStart.split(":");
-      const [hourEnd, minutesEnd] = lunesEnd.split(":");
+      const [hourStart, minutesStart] = lunesStart.split(":").map(Number);
+      const [hourEnd, minutesEnd] = lunesEnd.split(":").map(Number);
 
       const formatData: any = {
         report_id: report.id,
@@ -291,6 +291,8 @@ class DataService {
           const [hour, minutes] = horaCompleta.split(":");
 
           let newHour: number = Number(hour) - 5;
+
+          console.log("su horas es:", hourStart, hourEnd);
 
           if (Number(hour) >= 0 && Number(hour) <= 4) {
             newHour = 23 - 4 + Number(hour);
@@ -331,7 +333,7 @@ class DataService {
             if (newHour >= Number(hourEnd)) {
               formatData.falta = "no";
             } else {
-              formatData.falta = "si";
+              // formatData.falta = "si";
               formatData.tardanza = "no";
               formatData.discount = 35;
             }

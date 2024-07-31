@@ -16,7 +16,7 @@ class TestController {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const date = new Date();
-                const serviceResponse = yield data_service_1.dataService.instanceDataInit(19, 19, 2024, 6);
+                const serviceResponse = yield data_service_1.dataService.instanceDataInit(15, 19, 2024, 7);
                 response.status(serviceResponse.statusCode).json(serviceResponse.content);
             }
             catch (error) {

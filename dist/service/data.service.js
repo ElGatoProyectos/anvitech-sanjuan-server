@@ -155,8 +155,8 @@ class DataService {
                 const [lunesStart, lunesEnd] = schedule.lunes.split("-");
                 // ! corregir esto
                 // const [lunesStart, lunesEnd] = "09:00-18:00".split("-");
-                const [hourStart, minutesStart] = lunesStart.split(":");
-                const [hourEnd, minutesEnd] = lunesEnd.split(":");
+                const [hourStart, minutesStart] = lunesStart.split(":").map(Number);
+                const [hourEnd, minutesEnd] = lunesEnd.split(":").map(Number);
                 const formatData = {
                     report_id: report.id,
                     tardanza: "no",
@@ -184,6 +184,7 @@ class DataService {
                         const horaCompleta = item.checktime.split("T")[1].split("+")[0];
                         const [hour, minutes] = horaCompleta.split(":");
                         let newHour = Number(hour) - 5;
+                        console.log("su horas es:", hourStart, hourEnd);
                         if (Number(hour) >= 0 && Number(hour) <= 4) {
                             newHour = 23 - 4 + Number(hour);
                         }
@@ -226,7 +227,7 @@ class DataService {
                                 formatData.falta = "no";
                             }
                             else {
-                                formatData.falta = "si";
+                                // formatData.falta = "si";
                                 formatData.tardanza = "no";
                                 formatData.discount = 35;
                             }
