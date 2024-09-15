@@ -457,6 +457,17 @@ class DataService {
         formatData.discount = 0;
       }
 
+      if (dayString === "sabado" || dayString === "domingo") {
+        formatData.falta = "no";
+        formatData.tardanza = "no";
+        formatData.discount = 0;
+        formatData.hora_entrada = "00:00";
+        formatData.hora_inicio = "00:00";
+        formatData.hora_inicio_refrigerio = "00:00";
+        formatData.hora_fin_refrigerio = "00:00";
+        formatData.hora_salida = "00:00";
+      }
+
       await prisma.detailReport.create({ data: formatData });
       await prisma.$disconnect();
     } catch (error) {
